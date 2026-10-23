@@ -1,6 +1,5 @@
 import os
 import sys
-import urllib.parse
 
 # Add root project directory to Python module search path
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -11,34 +10,27 @@ if ROOT_DIR not in sys.path:
 from app import app
 
 
-class VercelPathFixMiddleware:
+class VercelPrefixMiddleware:
     """
-    WSGI Middleware to restore the client's original requested URL path
-    when rewritten by Vercel serverless routing.
+    WSGI Middleware to strip Vercel serverless function prefix (/api/index or /api/index.py)
+    so Flask routes match the exact requested URI (/ , /admin, /api/*).
     """
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        qs = environ.get("QUERY_STRING", "")
-        params = urllib.parse.parse_qs(qs)
-
-        raw_path = None
-        for key in ("path", "__vercel_path", "p"):
-            if key in params:
-                raw_path = params[key][0]
-                del params[key]
-                environ["QUERY_STRING"] = urllib.parse.urlencode(params, doseq=True)
+        path = environ.get("PATH_INFO", "")
+        for prefix in ("/api/index.py", "/api/index"):
+            if path.startswith(prefix):
+                path = path[len(prefix):]
                 break
-
-        if raw_path is not None:
-            clean = "/" + raw_path.lstrip("/")
-            environ["PATH_INFO"] = clean
-        elif environ.get("PATH_INFO", "") in ("/api/index", "/api/index.py", "/api"):
-            environ["PATH_INFO"] = "/"
-
+        if not path or path == "":
+            path = "/"
+        elif not path.startswith("/"):
+            path = "/" + path
+        environ["PATH_INFO"] = path
         return self.wsgi_app(environ, start_response)
 
 
-# Wrap Flask WSGI app with Vercel path fix middleware
-app.wsgi_app = VercelPathFixMiddleware(app.wsgi_app)
+# Wrap Flask WSGI app with Vercel prefix middleware
+app.wsgi_app = VercelPrefixMiddleware(app.wsgi_app)
