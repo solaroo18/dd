@@ -152,7 +152,8 @@ def extract_cookie_dict(text):
 
 
 def build_nftoken_link(token):
-    return "https://netflix.com/?nftoken=" + token
+    encoded_token = urllib.parse.quote(token, safe="")
+    return "https://www.netflix.com/youraccount?nftoken=" + encoded_token
 
 
 def fetch_nftoken(cookie_dict):

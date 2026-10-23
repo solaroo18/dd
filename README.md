@@ -1,30 +1,22 @@
-# Netflix NFToken Generator
+# XNetflix — Netflix Activation & NFToken Studio
 
-Simple Python script that shows how a Netflix `NFToken` link is generated from a valid Netflix session cookie.
-
-The script reads the cookie from `input.txt`, sends the required request to Netflix, and prints the `nftoken` login link in the console.
-
-It also includes comments in the code so the request flow is easier to understand for anyone reading or modifying it.
-
-## Discord
-
-- Discord server: https://discord.gg/DYJFE9nu5X
+A secure web application and automated generator for Netflix `NFToken` links and Smart TV activations.
 
 ## Features
 
-- Simple local script with no extra UI
-- Reads cookie from `input.txt`
-- Auto-creates `input.txt` if it is missing
-- Supports raw cookie string, Netscape cookie format, and JSON cookie input
-- Prints the full Netflix `nftoken` link in console
-- Includes inline comments explaining each step of the flow
+- **Modern Web Dashboard & UI**: Interactive Netflix-styled dark UI with Arabic/English bilingual support.
+- **Netflix Activation (1-Click)**: Instant token generation and direct auto-login links.
+- **Smart TV Activation**: Direct link generator and QR codes for activating Netflix on Smart TVs (`netflix.com/tv8`).
+- **Interactive QR Codes**: Real-time QR codes for mobile & TV scanning.
+- **Enterprise Security Hardened**: OWASP headers (CSP, HSTS), rate limiting, brute force lockout, IP-bound sessions, and encrypted credentials.
+- **Supports Multiple Formats**: Netscape cookies, raw cookie strings, and JSON cookie arrays.
 
 ## Requirements
 
-Install the required module:
+Install the required modules:
 
 ```bash
-pip install requests
+pip install -r requirements.txt
 ```
 
 ## Quick Start
@@ -61,6 +53,34 @@ python nf-token-generator.py
 ```text
 https://www.netflix.com/?nftoken=...
 ```
+
+## ⚡ Vercel Deployment (النشر السحابي المجاني على Vercel)
+
+المشروع مُعدّ ومضبوط بنسبة 100% ليعمل على **Vercel** بنظام Serverless:
+1. استورد هذا المستودع في [Vercel Dashboard](https://vercel.com/new).
+2. سيقوم Vercel باكتشاف إعدادات `vercel.json` وملف الدخول `api/index.py` تلقائياً.
+3. اضغط **Deploy**.
+4. للمزيد من التفاصيل حول ضبط الـ Environment Variables، راجع [VERCEL_DEPLOYMENT_GUIDE.md](file:///home/ramzi/Netflix-NFToken-Generator/VERCEL_DEPLOYMENT_GUIDE.md).
+
+## 🚀 Cloud / VPS Deployment (التشغيل المباشر أونلاين على السيرفر)
+
+لجعل الموقع يعمل أونلاين ومباشرة على سيرفرات سحابية مثل **AWS Cloud (Amazon Linux 2 / 2023)** أو أي سيرفر VPS يعمل بـ **Ubuntu / Debian** عبر Nginx و Systemd:
+
+```bash
+sudo bash deploy.sh
+```
+
+> **ملاحظة لمستخدمي AWS:** تأكد من فتح المنافذ (Inbound Rules) في **Security Group**:
+> - Port 80 (HTTP)
+> - Port 443 (HTTPS)
+> - Port 22 (SSH)
+
+أوامر التحكم السريعة:
+- **الحالة**: `sudo bash deploy.sh status`
+- **إعادة التشغيل**: `sudo bash deploy.sh restart`
+- **السجلات الحية**: `sudo bash deploy.sh logs`
+- **تفعيل SSL/HTTPS مع دومين**: `sudo bash deploy.sh ssl yourdomain.com`
+
 
 ## Input Example
 

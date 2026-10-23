@@ -1,0 +1,22 @@
+venv/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Sensitive data and credential files (Security Protection)
+admin_config.json
+cookies_pool.json
+history.json
+input.txt
+device_limits.json
+device_aliases.json
+user_sessions.json
+user_languages.json
+admin_sessions.json
+access_keys.json
+.flask_secret
+app.log
+*.log

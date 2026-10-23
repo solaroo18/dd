@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  netflix-token-generator:
+    build: .
+    container_name: netflix-nftoken
+    restart: always
+    ports:
+      - "80:5000"
+    volumes:
+      - ./history.json:/app/history.json
+      - ./cookies_pool.json:/app/cookies_pool.json
+      - ./device_limits.json:/app/device_limits.json
+      - ./device_aliases.json:/app/device_aliases.json
+      - ./admin_config.json:/app/admin_config.json
+      - ./admin_sessions.json:/app/admin_sessions.json
+      - ./.flask_secret:/app/.flask_secret
+      - ./input.txt:/app/input.txt

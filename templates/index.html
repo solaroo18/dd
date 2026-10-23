@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neflix — Auto-Login & TV Activation</title>
+  <meta name="description" content="Instant Neflix auto-login link and TV activation — no password needed.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Cairo:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css?v=2.4">
+  <link rel="icon" type="image/png" href="/static/img/Netflix.png">
+</head>
+<body>
+  <div class="ambient-glow"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-box">
+          <img src="/static/img/Netflix.png" alt="Neflix" class="logo-img">
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">Neflix</h1>
+        </div>
+      </div>
+      <div class="header-right-actions">
+        <!-- Key Indicator Chip (when unlocked) -->
+        <button type="button" class="key-status-chip hidden" id="btnKeyStatusChip" title="View or Switch Access Key">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 2l-2 2m-1.5 1.5L12 11l-4-4-5 5 4 4 1-1m8.5-8.5l3 3"></path></svg>
+          <span id="keyStatusChipLabel">Key</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View -->
+  <main class="simple-main-wrapper">
+    <div class="simple-activation-card">
+
+      <!-- Active Key & Remaining Time Indicator Banner -->
+      <div class="active-key-banner hidden" id="activeKeyBanner">
+        <div class="key-banner-meta">
+          <span class="key-banner-badge" id="keyBannerLabel">VIP Key</span>
+          <span class="key-banner-code" id="keyBannerDisplay">NF-****-****</span>
+        </div>
+        <div class="key-banner-countdown" id="keyBannerCountdown" title="Remaining Validity">
+          <svg class="key-timer-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span class="key-timer-text" id="keyBannerTime">--</span>
+        </div>
+      </div>
+      
+      <!-- Device Segmented Tabs -->
+      <div class="device-tabs-bar" role="tablist">
+        <button type="button" class="device-tab-btn" data-device="computer" id="tabComputer" role="tab">
+          <svg class="device-icon tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span data-i18n="tabComputer">Computer</span>
+        </button>
+
+        <button type="button" class="device-tab-btn" data-device="phone" id="tabPhone" role="tab">
+          <svg class="device-icon tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2.5"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+          <span data-i18n="tabPhone">Phone</span>
+        </button>
+
+        <button type="button" class="device-tab-btn active" data-device="tv" id="tabTv" role="tab">
+          <svg class="device-icon tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>
+          <span data-i18n="tabTv">TV</span>
+        </button>
+      </div>
+
+      <!-- Card Body Content -->
+      <div class="simple-card-body">
+        
+        <!-- Primary Action Button: Open Netflix -->
+        <a href="#" target="_blank" class="btn-open-netflix disabled" id="btnOpenNetflix">
+          <span class="btn-spinner" id="mainBtnSpinner"></span>
+          <svg class="btn-play-icon" id="btnPlayIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span class="btn-label" id="btnOpenLabel" data-i18n="openNetflix">Open Netflix</span>
+        </a>
+
+        <!-- Secondary Action Button: New Link -->
+        <button type="button" class="btn-new-link disabled" id="btnRefreshLink" title="Draw a new account from pool">
+          <span class="btn-spinner hidden" id="refreshBtnSpinner"></span>
+          <svg class="btn-refresh-icon" id="btnRefreshIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          <span id="btnRefreshLabel" data-i18n="btnNewLink">New Link</span>
+          <span class="daily-badge" id="dailyQuotaBadge" title="Remaining daily link rotations">3/3</span>
+        </button>
+
+        <!-- Dynamic Helper Note -->
+        <p class="simple-helper-note" id="simpleHelperNote" data-i18n="helperTv">
+          Tap “Open Netflix” to enter your TV screen code directly.
+        </p>
+
+        <!-- Secondary Controls: QR Code Toggle -->
+        <div class="simple-secondary-controls">
+          <button type="button" class="control-text-btn" id="btnToggleQr" title="Show QR Code">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <span data-i18n="btnShowQr">QR Code</span>
+          </button>
+        </div>
+
+        <!-- Collapsible QR Code Drawer -->
+        <div class="simple-qr-drawer hidden" id="qrDrawer">
+          <div class="qr-drawer-inner">
+            <div class="qr-loading-box" id="qrLoadingBox">
+              <span class="qr-pulse-dot"></span>
+              <span class="qr-loading-text" data-i18n="generatingQr">Generating QR Code...</span>
+            </div>
+            <img src="" alt="QR Code" class="qr-drawer-img hidden" id="qrDrawerImg">
+            <span class="qr-drawer-caption" data-i18n="qrScanHint">Scan with phone camera to open on mobile</span>
+          </div>
+        </div>
+
+        <!-- Inline Status/Error Banner -->
+        <div class="simple-alert-box hidden" id="simpleAlertBox">
+          <span id="simpleAlertMsg"></span>
+          <button type="button" class="alert-retry-btn" id="btnAlertRetry" data-i18n="retry">Retry</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Private Access Key Gate Overlay -->
+  <div class="access-gate-overlay hidden" id="accessGateOverlay">
+    <div class="access-gate-card">
+      <div class="access-gate-glow"></div>
+      
+
+
+      <h2 class="access-gate-title" data-i18n="gateTitleMain">Private Access Gate</h2>
+      <p class="access-gate-desc" data-i18n="gateDescMain">This service is private. Please enter an authorized access key provided by the administrator to continue.</p>
+
+      <form class="access-gate-form" id="gateKeyForm" onsubmit="return false;">
+        <div class="gate-input-wrapper">
+          <svg class="gate-key-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-1.5 1.5L12 11l-4-4-5 5 4 4 1-1m8.5-8.5l3 3"></path>
+          </svg>
+          <input type="text" id="gateKeyInput" class="gate-key-input" placeholder="NF-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" autofocus>
+          <button type="button" class="btn-paste-key" id="btnPasteGateKey" title="Paste from clipboard">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          </button>
+        </div>
+
+        <div class="gate-error-banner hidden" id="gateKeyError">
+          <span id="gateKeyErrorMsg">Invalid access key</span>
+        </div>
+
+        <button type="button" class="btn-gate-submit" id="btnSubmitGateKey">
+          <span class="btn-spinner hidden" id="gateKeySpinner"></span>
+          <span id="gateSubmitLabel" data-i18n="gateSubmit">Unlock Access</span>
+        </button>
+      </form>
+
+      <div class="access-gate-footer">
+        <p class="gate-contact-admin" data-i18n="gateHint">Or contact the administrator for assistance.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Details / Switch Key Modal -->
+  <div class="key-switch-modal hidden" id="keySwitchModal">
+    <div class="key-switch-card">
+      <div class="key-switch-header">
+        <h3 data-i18n="activeKeyTitle">Active Access Key</h3>
+        <button type="button" class="btn-close-modal" id="btnCloseKeySwitch">✕</button>
+      </div>
+      <div class="key-switch-body">
+        <div class="active-key-pill" id="activeKeyDisplay">NF-****-****</div>
+        <p class="key-owner-note" id="activeKeyOwner">Owner: --</p>
+        
+        <div class="key-info-stat-box">
+          <div class="key-info-stat-row">
+            <span class="stat-label" data-i18n="remainingValidity">Remaining Time:</span>
+            <span class="stat-val stat-val-timer" id="activeKeyRemaining">--</span>
+          </div>
+          <div class="key-info-stat-row" id="activeKeyExpiryRow">
+            <span class="stat-label" data-i18n="expiryDate">Expiry Date:</span>
+            <span class="stat-val" id="activeKeyExpiry">--</span>
+          </div>
+        </div>
+
+        <div class="key-switch-actions">
+          <button type="button" class="btn-copy-login" id="btnCopyActiveKey" style="margin-bottom: 8px;">
+            <span data-i18n="copyKey">Copy Key</span>
+          </button>
+          <button type="button" class="btn-copy-login btn-key-logout" id="btnLogoutKey">
+            <span data-i18n="switchKey">Log Out / Switch Key</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Toast notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Adsterra Banner 468x60 -->
+  <div class="ad-banner-wrapper" id="adBannerWrapper">
+    <script>
+      atOptions = {
+        'key' : 'c3ab2f27987ab0b20e0e08ee8f0dcc13',
+        'format' : 'iframe',
+        'height' : 60,
+        'width' : 468,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="//www.highperformanceformat.com/c3ab2f27987ab0b20e0e08ee8f0dcc13/invoke.js"></script>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <span class="footer-copy">Neflix — 2026</span>
+      <span>Auto-Login & TV Activation</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js?v=2.5"></script>
+
+  <!-- Adsterra Social Bar -->
+  <script src="https://pl31836477.profitableratecpmnetwork.com/2f/c4/a4/2fc4a4b50f4bf52dce730f8100d19823.js"></script>
+
+</body>
+</html>

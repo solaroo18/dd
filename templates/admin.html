@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XNetflix — Admin Portal</title>
+  <meta name="description" content="XNetflix Admin Portal — Cookie Pool Management & System Configuration">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/static/img/Netflix.png">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css?v=2.4">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-brand">
+        <a href="/" class="brand-home-link">
+          <div class="admin-logo-wrap">
+            <img src="/static/img/Netflix.png" alt="XNetflix" class="admin-logo-img">
+          </div>
+          <div class="brand-text-block">
+            <h1 class="brand-title" data-i18n="adminBrandTitle">XNetflix Admin</h1>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-actions">
+        <!-- Vercel Serverless Ready Chip -->
+        <div class="vercel-cloud-chip" id="adminVercelChip" title="Serverless Deployment Ready">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L24 22H0L12 1Z"/></svg>
+          <span id="adminVercelChipText">Vercel Ready</span>
+        </div>
+
+        <!-- Logged In User Chip -->
+        <div class="user-identity-chip hidden" id="userIdentityChip">
+          <span class="chip-dot"></span>
+          <span data-i18n="loggedAs">Admin:</span>
+          <strong id="loggedUsername">admin</strong>
+        </div>
+
+        <!-- Live Pool Badge -->
+        <div class="pool-live-badge">
+          <span class="pool-pulse-dot"></span>
+          <span class="pool-badge-label" data-i18n="livePoolBadge">Active:</span>
+          <strong class="pool-badge-num" id="headerPoolCount">0</strong>
+        </div>
+
+        <!-- Back to Main Site -->
+        <a href="/" class="admin-nav-btn" id="btnNavHome">
+          <span data-i18n="navHome">Main Site</span>
+        </a>
+
+        <!-- Logout -->
+        <button type="button" class="admin-nav-btn admin-nav-danger hidden" id="btnNavLogout">
+          <span data-i18n="navLogout">Logout</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="admin-page-container">
+
+    <!-- LOGIN VIEW -->
+    <section class="admin-login-hero" id="adminLoginSection">
+      <div class="admin-auth-card">
+        <div class="auth-card-accent"></div>
+        <h2 class="admin-auth-title" data-i18n="authCardTitle">Admin Authentication</h2>
+        <p class="admin-auth-desc" data-i18n="authCardSubtitle">Enter your credentials to access the control panel</p>
+
+        <div class="admin-auth-form">
+          <div class="admin-field-group">
+            <label class="admin-field-label" for="adminUserInput">
+              <span data-i18n="userInputLabel">Username</span>
+            </label>
+            <input type="text" id="adminUserInput" class="admin-auth-input"
+              placeholder="Username"
+              data-i18n-placeholder="userInputPlaceholder"
+              autocomplete="username" autofocus>
+          </div>
+
+          <div class="admin-field-group">
+            <label class="admin-field-label" for="adminPassInput">
+              <span data-i18n="passInputLabel">Password</span>
+            </label>
+            <div class="admin-auth-input-wrap">
+              <input type="password" id="adminPassInput" class="admin-auth-input"
+                placeholder="Password"
+                data-i18n-placeholder="passInputPlaceholder"
+                autocomplete="current-password">
+              <button type="button" class="btn-toggle-eye" id="btnToggleEye" title="Show / Hide">
+                <span class="eye-label">Show</span>
+              </button>
+            </div>
+          </div>
+
+          <button type="button" class="btn-primary-action admin-auth-btn" id="btnAdminLogin">
+            <span class="spinner" id="adminLoginSpinner"></span>
+            <span data-i18n="loginBtn">Access Dashboard</span>
+          </button>
+        </div>
+
+        <div class="admin-auth-footer">
+          <span data-i18n="secureZoneNotice">Encrypted & monitored — authorized administrators only</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD VIEW -->
+    <section class="hidden" id="adminDashboardSection">
+
+      <!-- Dashboard Header -->
+      <div class="admin-dash-header">
+        <div class="dash-header-text">
+          <h2 data-i18n="dashGreeting">System Overview</h2>
+          <p data-i18n="dashSubtitle">Manage cookie pool, test validity, and configure settings</p>
+        </div>
+        <div class="admin-quick-actions">
+          <button type="button" class="admin-action-btn" id="btnQuickTestAll">
+            <span id="testAllBtnText" data-i18n="btnTestAll">Test All</span>
+          </button>
+          <button type="button" class="admin-action-btn" id="btnExportBackup">
+            <span data-i18n="btnExport">Export Backup</span>
+          </button>
+          <button type="button" class="admin-action-btn" id="btnQuickRefresh">
+            <span data-i18n="refreshBtn">Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Metrics Grid -->
+      <div class="admin-metrics-grid">
+        <div class="metric-card">
+          <div class="metric-accent metric-accent-blue"></div>
+          <div class="metric-body">
+            <span class="metric-label" data-i18n="metricTotal">Total Accounts</span>
+            <strong class="metric-value" id="metricTotalVal">0</strong>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-accent metric-accent-green"></div>
+          <div class="metric-body">
+            <span class="metric-label" data-i18n="metricActive">Active</span>
+            <strong class="metric-value text-green" id="metricActiveVal">0</strong>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-accent metric-accent-red"></div>
+          <div class="metric-body">
+            <span class="metric-label" data-i18n="metricInactive">Inactive / Expired</span>
+            <strong class="metric-value text-red" id="metricInactiveVal">0</strong>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-accent metric-accent-gold"></div>
+          <div class="metric-body">
+            <span class="metric-label" data-i18n="metricUsage">Total Generations</span>
+            <strong class="metric-value text-gold" id="metricUsesVal">0</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Bar -->
+      <div class="pool-health-card">
+        <div class="health-header">
+          <span data-i18n="healthLabel">Pool Health</span>
+          <span id="healthPercentText">0%</span>
+        </div>
+        <div class="health-progress-bg">
+          <div class="health-progress-bar" id="healthProgressBar"></div>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <nav class="admin-tabs-nav">
+        <button class="admin-tab-button active" data-tab="pane-inventory">
+          <span data-i18n="tabInventory">Cookie Pool</span>
+          <span class="tab-count" id="tabInventoryBadge">0</span>
+        </button>
+        <button class="admin-tab-button" data-tab="pane-add">
+          <span data-i18n="tabAdd">Add Cookies</span>
+        </button>
+        <button class="admin-tab-button" data-tab="pane-keys" id="tabBtnKeys">
+          <span data-i18n="tabKeys">Access Keys</span>
+          <span class="tab-count" id="tabKeysBadge">0</span>
+        </button>
+        <button class="admin-tab-button" data-tab="pane-settings">
+          <span data-i18n="tabSettings">Settings</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: INVENTORY -->
+      <div class="admin-tab-pane" id="pane-inventory">
+        <div class="admin-content-card">
+          <div class="card-title-bar">
+            <div>
+              <h3 data-i18n="inventoryTitle">Cookie Pool Inventory</h3>
+              <p class="card-subtitle">Manage all active accounts in the cookie pool</p>
+            </div>
+            <div class="inv-actions">
+              <button type="button" class="admin-action-btn admin-action-danger" id="btnClearAllPool">
+                <span data-i18n="clearAllBtn">Clear All</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bulk Toolbar -->
+          <div class="bulk-toolbar hidden" id="bulkToolbar">
+            <span class="bulk-selected-count" id="bulkSelectedText">0 selected</span>
+            <div class="bulk-buttons-group">
+              <button type="button" class="admin-action-btn admin-action-sm" id="btnBulkActivate">Activate</button>
+              <button type="button" class="admin-action-btn admin-action-sm" id="btnBulkDeactivate">Deactivate</button>
+              <button type="button" class="admin-action-btn admin-action-danger admin-action-sm" id="btnBulkDelete">Delete</button>
+            </div>
+          </div>
+
+          <!-- Search & Filter -->
+          <div class="table-toolbar">
+            <div class="table-filter-group">
+              <input type="text" id="inventorySearch" class="admin-input-field"
+                placeholder="Search by name or ID..."
+                data-i18n-placeholder="searchPlaceholder">
+              <select id="inventoryStatusFilter" class="admin-select-field">
+                <option value="all" data-i18n="filterAll">All Statuses</option>
+                <option value="active" data-i18n="filterActive">Active Only</option>
+                <option value="inactive" data-i18n="filterInactive">Inactive</option>
+                <option value="expired" data-i18n="filterExpired">Expired</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="admin-table-wrapper">
+            <table class="admin-table" id="adminInventoryTable">
+              <thead>
+                <tr>
+                  <th class="th-check">
+                    <input type="checkbox" id="selectAllCheckbox" title="Select All">
+                  </th>
+                  <th data-i18n="thName">Account</th>
+                  <th data-i18n="thFormat">Format</th>
+                  <th data-i18n="thStatus">Status</th>
+                  <th data-i18n="thUses">Uses</th>
+                  <th data-i18n="thAdded">Added</th>
+                  <th data-i18n="thOps">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminInventoryTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: ADD COOKIES -->
+      <div class="admin-tab-pane hidden" id="pane-add">
+        <div class="admin-content-card">
+          <div class="card-title-bar">
+            <div>
+              <h3 data-i18n="addTitle">Add New Cookies</h3>
+              <p class="card-subtitle">Import or paste accounts into the active pool</p>
+            </div>
+            <button type="button" class="admin-action-btn" id="btnImportInput">
+              <span data-i18n="importInputTxtBtn">Import from input.txt</span>
+            </button>
+          </div>
+
+          <div class="admin-add-form">
+            <div class="form-row">
+              <label for="adminAccountName" data-i18n="accountNameLabel">Account Name (optional)</label>
+              <input type="text" id="adminAccountName" class="admin-input-field"
+                placeholder="e.g. Premium Account #1"
+                data-i18n-placeholder="accountNamePlaceholder">
+            </div>
+
+            <div class="form-row">
+              <div class="label-with-tool">
+                <label for="adminCookiesText" data-i18n="cookiesTextLabel">Cookie Data</label>
+                <button type="button" class="admin-action-btn admin-action-sm" id="btnClearCookiesText">
+                  <span data-i18n="clearTextBtn">Clear</span>
+                </button>
+              </div>
+
+              <div class="format-detection-bar" id="detectionBar">
+                <span>Format: <strong class="format-detection-badge" id="detectedFormatBadge">None</strong></span>
+                <span id="detectedCountBadge">0 accounts</span>
+              </div>
+
+              <textarea id="adminCookiesText" class="admin-textarea" rows="8"
+                placeholder="Paste Netflix cookies here...&#10;Separate multiple accounts with --- on a new line."
+                data-i18n-placeholder="cookiesPlaceholder"
+                spellcheck="false"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-primary-action" id="btnSaveCookies">
+                <span class="spinner" id="saveSpinner"></span>
+                <span data-i18n="saveCookiesBtn">Save to Pool</span>
+              </button>
+            </div>
+
+            <div class="helper-banner">
+              <strong data-i18n="addHintTitle">Supported formats:</strong>
+              <p data-i18n="addHintDesc">Netscape, Raw Header String, and JSON Array. Separate multiple accounts with <code>---</code> on a new line.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: ACCESS KEYS -->
+      <div class="admin-tab-pane hidden" id="pane-keys">
+        
+        <!-- Key Gate Master Toggle Card -->
+        <div class="admin-content-card" style="margin-bottom: 24px;">
+          <div class="key-gate-banner">
+            <div class="key-gate-info">
+              <div class="key-gate-text">
+                <h3 data-i18n="gateTitle">Private Access Gate</h3>
+                <p data-i18n="gateSubtitle">When enabled, visitors cannot generate tokens or use the service without entering an admin-authorized access key.</p>
+              </div>
+            </div>
+            <div class="key-gate-toggle-wrap">
+              <label class="toggle-switch">
+                <input type="checkbox" id="chkRequireKey" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-status-badge badge-active" id="gateStatusBadge">Active / Locked</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Metrics Row -->
+        <div class="admin-metrics-grid" style="margin-bottom: 24px;">
+          <div class="metric-card">
+            <div class="metric-accent metric-accent-blue"></div>
+            <div class="metric-body">
+              <span class="metric-label" data-i18n="metricTotalKeys">Total Issued Keys</span>
+              <strong class="metric-value" id="metricTotalKeys">0</strong>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-accent metric-accent-green"></div>
+            <div class="metric-body">
+              <span class="metric-label" data-i18n="metricActiveKeys">Active Keys</span>
+              <strong class="metric-value text-green" id="metricActiveKeys">0</strong>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-accent metric-accent-gold"></div>
+            <div class="metric-body">
+              <span class="metric-label" data-i18n="metricKeyUses">Total Key Activations</span>
+              <strong class="metric-value text-gold" id="metricKeyUses">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Key Generator Card -->
+        <div class="admin-content-card" style="margin-bottom: 24px;">
+          <div class="card-title-bar">
+            <h3>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;"><path d="M21 2l-2 2m-1.5 1.5L12 11l-4-4-5 5 4 4 1-1m8.5-8.5l3 3"></path></svg>
+              <span data-i18n="generateKeyTitle">Generate New Access Key</span>
+            </h3>
+          </div>
+
+          <div class="admin-add-form">
+            <div class="keys-form-grid">
+              <div class="form-row">
+                <label for="keyLabelInput" data-i18n="keyLabelOwner">Owner / Note (e.g. Client Name)</label>
+                <input type="text" id="keyLabelInput" class="admin-input-field" placeholder="e.g. Ahmed, VIP Member #1">
+              </div>
+
+              <div class="form-row">
+                <label for="keyExpiresSelect" data-i18n="keyLabelExpires">Expiration</label>
+                <select id="keyExpiresSelect" class="admin-select-field">
+                  <option value="never">Never (Permanent)</option>
+                  <option value="24h">24 Hours (1 Day)</option>
+                  <option value="3d">3 Days</option>
+                  <option value="7d">7 Days (1 Week)</option>
+                  <option value="30d">30 Days (1 Month)</option>
+                  <option value="90d">90 Days (3 Months)</option>
+                  <option value="1y">1 Year</option>
+                  <option value="custom">Custom Date...</option>
+                </select>
+              </div>
+
+              <div class="form-row hidden" id="customExpiresRow">
+                <label for="keyCustomExpiresInput">Expiry Date</label>
+                <input type="date" id="keyCustomExpiresInput" class="admin-input-field">
+              </div>
+
+              <div class="form-row">
+                <label for="keyMaxUsesSelect" data-i18n="keyLabelMaxUses">Max Uses / Generations</label>
+                <select id="keyMaxUsesSelect" class="admin-select-field">
+                  <option value="unlimited">Unlimited (∞</option>
+                  <option value="1">1 Use (Single Activation)</option>
+                  <option value="3">3 Uses</option>
+                  <option value="5">5 Uses</option>
+                  <option value="10">10 Uses</option>
+                  <option value="25">25 Uses</option>
+                  <option value="50">50 Uses</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label for="keyCountSelect" data-i18n="keyLabelCount">Quantity to Generate</label>
+                <select id="keyCountSelect" class="admin-select-field">
+                  <option value="1">1 Key</option>
+                  <option value="3">3 Keys</option>
+                  <option value="5">5 Keys</option>
+                  <option value="10">10 Keys</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label for="keyCustomCodeInput" data-i18n="keyLabelCustomCode">Custom Code (optional)</label>
+                <input type="text" id="keyCustomCodeInput" class="admin-input-field" placeholder="Leave blank for auto NF-XXXX-XXXX-XXXX">
+              </div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 16px;">
+              <button type="button" class="btn-primary-action" id="btnGenerateKey">
+                <span class="spinner" id="generateKeySpinner"></span>
+                <span data-i18n="btnCreateKey">+ Create Access Key</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Newly Created Keys Notification Box -->
+          <div class="created-keys-box hidden" id="createdKeysBox">
+            <div class="created-keys-header">
+              <span class="created-keys-title">✓ Newly Generated Key(s):</span>
+              <button type="button" class="admin-action-btn admin-action-sm" id="btnCloseCreatedKeys">Dismiss</button>
+            </div>
+            <div class="created-keys-list" id="createdKeysList"></div>
+          </div>
+        </div>
+
+        <!-- Keys Inventory Table Card -->
+        <div class="admin-content-card">
+          <div class="card-title-bar">
+            <h3 data-i18n="keysDirectoryTitle">Access Keys Directory</h3>
+            <div class="inv-actions">
+              <button type="button" class="admin-action-btn admin-action-danger" id="btnClearExpiredKeys">
+                <span data-i18n="cleanExpiredKeysBtn">Clean Expired Keys</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Search & Filter -->
+          <div class="table-toolbar">
+            <div class="table-filter-group">
+              <input type="text" id="keysSearchInput" class="admin-input-field" placeholder="Search by key code or note...">
+              <select id="keysStatusFilter" class="admin-select-field">
+                <option value="all">All Statuses</option>
+                <option value="active">Active Only</option>
+                <option value="revoked">Revoked / Disabled</option>
+                <option value="expired">Expired / Exhausted</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="admin-table-wrapper">
+            <table class="admin-table" id="adminKeysTable">
+              <thead>
+                <tr>
+                  <th data-i18n="thKey">Access Key</th>
+                  <th data-i18n="thOwner">Owner / Note</th>
+                  <th data-i18n="thStatus">Status</th>
+                  <th data-i18n="thActivations">Activations</th>
+                  <th data-i18n="thExpiration">Expiration</th>
+                  <th data-i18n="thCreated">Created</th>
+                  <th data-i18n="thOps">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminKeysTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB 3: SETTINGS -->
+      <div class="admin-tab-pane hidden" id="pane-settings">
+        <div class="admin-content-card">
+          <div class="card-title-bar">
+            <h3 data-i18n="settingsTitle">Admin Settings</h3>
+          </div>
+
+          <div class="settings-section-block">
+            <h4 class="settings-section-title">Credentials</h4>
+
+            <div class="form-row">
+              <label for="newAdminUserInput" data-i18n="newUsernameLabel">New Username</label>
+              <input type="text" id="newAdminUserInput" class="admin-input-field"
+                placeholder="Minimum 3 characters">
+            </div>
+
+            <div class="form-row">
+              <label for="newAdminPassInput" data-i18n="newPassLabel">New Password</label>
+              <input type="password" id="newAdminPassInput" class="admin-input-field"
+                placeholder="Minimum 4 characters"
+                data-i18n-placeholder="changePassPlaceholder">
+            </div>
+
+            <button type="button" class="btn-primary-action admin-save-creds-btn" id="btnUpdateCredentials">
+              <span class="spinner" id="credSpinner"></span>
+              <span data-i18n="saveCredsBtn">Save Credentials</span>
+            </button>
+
+            <div class="settings-divider"></div>
+
+            <h4 class="settings-section-title" data-i18n="systemInfoTitle">System Information</h4>
+            <div class="system-info-grid">
+              <div class="sys-info-item">
+                <span class="sys-info-label">Server Status</span>
+                <span class="sys-info-value text-green">Online</span>
+              </div>
+              <div class="sys-info-item">
+                <span class="sys-info-label">Uptime</span>
+                <span class="sys-info-value" id="sysUptime">0h 0m</span>
+              </div>
+              <div class="sys-info-item">
+                <span class="sys-info-label">Python</span>
+                <span class="sys-info-value" id="sysPython">3.x</span>
+              </div>
+              <div class="sys-info-item">
+                <span class="sys-info-label">Environment</span>
+                <span class="sys-info-value text-green" id="sysEnvironment">Vercel Serverless</span>
+              </div>
+              <div class="sys-info-item">
+                <span class="sys-info-label">Storage Engine</span>
+                <span class="sys-info-value" id="sysStorageMode">Cloud Serverless</span>
+              </div>
+              <div class="sys-info-item">
+                <span class="sys-info-label">Active Devices Today</span>
+                <span class="sys-info-value" id="sysActiveDevices">0</span>
+              </div>
+              <div class="sys-info-item">
+                <span class="sys-info-label">Current Admin</span>
+                <span class="sys-info-value" id="sysCurrentAdmin">--</span>
+              </div>
+            </div>
+
+            <div class="settings-divider"></div>
+            <h4 class="settings-section-title">▲ Vercel Cloud Serverless Sync &amp; Deployment</h4>
+            <p style="font-size: 0.82rem; color: #a1a1aa; margin-bottom: 0.85rem; line-height: 1.5;">
+              This site is engineered to run seamlessly on Vercel Serverless. To ensure zero data loss when serverless instances cycle, export your configuration and add them to Vercel Project Settings &gt; Environment Variables.
+            </p>
+            <div style="display: flex; gap: 0.65rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+              <button type="button" class="btn-primary-action" id="btnCopyVercelEnv" style="width: auto; padding: 0.65rem 1.25rem; font-size: 0.85rem;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 5px;"><path d="M12 1L24 22H0L12 1Z"/></svg>
+                <span>Copy Vercel Environment Variables</span>
+              </button>
+            </div>
+
+            <div class="settings-actions-row">
+              <button type="button" class="admin-action-btn" id="btnResetDeviceLimits">
+                <span>Reset Device Limits</span>
+              </button>
+              <button type="button" class="admin-action-btn admin-action-danger" id="btnSettingsLogout">
+                <span data-i18n="navLogout">Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Cookie RAW Inspector Modal -->
+  <div class="admin-raw-modal hidden" id="rawModal" style="display: none;">
+    <div class="admin-raw-card">
+      <div class="raw-modal-header">
+        <h3 id="rawModalTitle">Raw Cookie Data</h3>
+        <button type="button" class="admin-action-btn admin-action-sm" id="btnCloseRawModal">Close</button>
+      </div>
+      <textarea id="rawModalText" class="admin-raw-textarea" readonly></textarea>
+      <div class="raw-modal-actions">
+        <button type="button" class="admin-action-btn" id="btnCopyRawModal">Copy to Clipboard</button>
+        <button type="button" class="btn-primary-action admin-action-sm" id="btnDoneRawModal">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <span class="footer-copy">XNetflix Admin Portal — 2026</span>
+      <span>For testing & educational purposes only</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/admin.js?v=2.4"></script>
+</body>
+</html>
