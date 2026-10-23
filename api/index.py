@@ -22,17 +22,21 @@ class VercelPathFixMiddleware:
     def __call__(self, environ, start_response):
         qs = environ.get("QUERY_STRING", "")
         params = urllib.parse.parse_qs(qs)
-        if "__vercel_path" in params:
-            target_path = params["__vercel_path"][0]
-            if not target_path.startswith("/"):
-                target_path = "/" + target_path
-            while target_path.startswith("//"):
-                target_path = target_path[1:]
-            environ["PATH_INFO"] = target_path
-            del params["__vercel_path"]
-            environ["QUERY_STRING"] = urllib.parse.urlencode(params, doseq=True)
+
+        raw_path = None
+        for key in ("path", "__vercel_path", "p"):
+            if key in params:
+                raw_path = params[key][0]
+                del params[key]
+                environ["QUERY_STRING"] = urllib.parse.urlencode(params, doseq=True)
+                break
+
+        if raw_path is not None:
+            clean = "/" + raw_path.lstrip("/")
+            environ["PATH_INFO"] = clean
         elif environ.get("PATH_INFO", "") in ("/api/index", "/api/index.py", "/api"):
             environ["PATH_INFO"] = "/"
+
         return self.wsgi_app(environ, start_response)
 
 
