@@ -1,5 +1,6 @@
 import os
 import sys
+import urllib.parse
 
 # Add root project directory to Python module search path
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -19,9 +20,17 @@ class VercelPathFixMiddleware:
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        matched = environ.get("HTTP_X_FORWARDED_URI") or environ.get("HTTP_X_MATCHED_PATH")
-        if matched:
-            environ["PATH_INFO"] = matched.split("?")[0]
+        qs = environ.get("QUERY_STRING", "")
+        params = urllib.parse.parse_qs(qs)
+        if "__vercel_path" in params:
+            target_path = params["__vercel_path"][0]
+            if not target_path.startswith("/"):
+                target_path = "/" + target_path
+            while target_path.startswith("//"):
+                target_path = target_path[1:]
+            environ["PATH_INFO"] = target_path
+            del params["__vercel_path"]
+            environ["QUERY_STRING"] = urllib.parse.urlencode(params, doseq=True)
         elif environ.get("PATH_INFO", "") in ("/api/index", "/api/index.py", "/api"):
             environ["PATH_INFO"] = "/"
         return self.wsgi_app(environ, start_response)

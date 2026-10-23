@@ -2570,16 +2570,7 @@ def get_history():
 @app.errorhandler(404)
 def not_found(e):
     if request.path.startswith("/api/"):
-        return jsonify({
-            "success": False,
-            "error": "Resource not found",
-            "debug": {
-                "request_path": request.path,
-                "environ_path_info": request.environ.get("PATH_INFO"),
-                "headers": dict(request.headers),
-                "environ_matches": [f"{k}={v}" for k, v in request.environ.items() if any(x in k for x in ("PATH", "URI", "VERCEL", "ROUTE"))]
-            }
-        }), 404
+        return jsonify({"success": False, "error": "Resource not found"}), 404
     return render_template("index.html"), 404
 
 
