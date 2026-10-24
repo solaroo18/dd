@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminTokenFromHeaderOrCookie, extractAccessKeyFromRequest, verifyAccessKey, formatRemainingTime } from '@/lib/auth';
 import { getAppSettings } from '@/lib/db-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const isAdmin = verifyAdminTokenFromHeaderOrCookie(req);
   const reqKey = extractAccessKeyFromRequest(req);

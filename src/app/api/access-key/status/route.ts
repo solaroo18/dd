@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractAccessKeyFromRequest, verifyAccessKey, formatRemainingTime } from '@/lib/auth';
 import { getAppSettings } from '@/lib/db-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const settings = await getAppSettings();
   const keyStr = extractAccessKeyFromRequest(req);

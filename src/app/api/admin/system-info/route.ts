@@ -3,6 +3,8 @@ import { verifyAdminTokenFromHeaderOrCookie } from '@/lib/auth';
 import { isMongoConfigured } from '@/lib/mongodb';
 import os from 'os';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   if (!verifyAdminTokenFromHeaderOrCookie(req)) {
     return NextResponse.json({ success: false, error: 'Unauthorized admin access.' }, { status: 401 });

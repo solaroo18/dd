@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCookiePool } from '@/lib/db-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const pool = await getCookiePool();
   const activeCount = pool.filter((c) => c.status === 'active').length;

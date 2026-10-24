@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminTokenFromHeaderOrCookie, formatRemainingTime } from '@/lib/auth';
 import { getAllAccessKeys, getAppSettings } from '@/lib/db-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   if (!verifyAdminTokenFromHeaderOrCookie(req)) {
     return NextResponse.json({ success: false, error: 'Unauthorized admin access.' }, { status: 401 });

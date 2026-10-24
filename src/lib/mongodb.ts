@@ -21,32 +21,48 @@ export async function getMongoClient(): Promise<MongoClient | null> {
     return null;
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    if (!global._mongoClientPromise) {
-      client = new MongoClient(MONGODB_URI);
-      global._mongoClientPromise = client.connect();
+  try {
+    if (process.env.NODE_ENV === 'development') {
+      if (!global._mongoClientPromise) {
+        client = new MongoClient(MONGODB_URI, {
+          serverSelectionTimeoutMS: 4000,
+          connectTimeoutMS: 4000,
+        });
+        global._mongoClientPromise = client.connect();
+      }
+      return await global._mongoClientPromise;
+    } else {
+      if (!clientPromise) {
+        client = new MongoClient(MONGODB_URI, {
+          serverSelectionTimeoutMS: 4000,
+          connectTimeoutMS: 4000,
+        });
+        clientPromise = client.connect();
+      }
+      return await clientPromise;
     }
-    return global._mongoClientPromise;
-  } else {
-    if (!clientPromise) {
-      client = new MongoClient(MONGODB_URI);
-      clientPromise = client.connect();
-    }
-    return clientPromise;
+  } catch (err) {
+    console.warn('[MongoDB Connection Warning - Falling back to local data]:', (err as any)?.message || err);
+    return null;
   }
 }
 
 export async function getDb(): Promise<Db | null> {
-  const cli = await getMongoClient();
-  if (!cli) return null;
-  return cli.db(DB_NAME);
+  try {
+    const cli = await getMongoClient();
+    if (!cli) return null;
+    return cli.db(DB_NAME);
+  } catch (err) {
+    console.warn('[MongoDB getDb Warning]:', (err as any)?.message || err);
+    return null;
+  }
 }
 
 // Auto-seed existing JSON data into MongoDB if collections are empty
 export async function seedMongoFromLocalFiles(db: Db) {
   try {
     const cookiesCol = db.collection('cookies');
-    const cookieCount = await cookiesCol.countDocuments();
+    const cookieCount = await cookiesCol.countDocuments().catch(() => -1);
     if (cookieCount === 0) {
       const cookiesPath = path.join(process.cwd(), 'cookies_pool.json');
       if (fs.existsSync(cookiesPath)) {
@@ -60,7 +76,7 @@ export async function seedMongoFromLocalFiles(db: Db) {
     }
 
     const keysCol = db.collection('access_keys');
-    const keyCount = await keysCol.countDocuments();
+    const keyCount = await keysCol.countDocuments().catch(() => -1);
     if (keyCount === 0) {
       const keysPath = path.join(process.cwd(), 'access_keys.json');
       if (fs.existsSync(keysPath)) {
@@ -75,7 +91,7 @@ export async function seedMongoFromLocalFiles(db: Db) {
     }
 
     const settingsCol = db.collection('settings');
-    const settingsDoc = await settingsCol.findOne({ key: 'app_settings' });
+    const settingsDoc = await settingsCol.findOne({ key: 'app_settings' }).catch(() => null);
     if (!settingsDoc) {
       let adminUser = 'cuberwise18';
       let adminPassHash = '$2a$10$wT8hTqL5jG8oO2mS8h7J1OB8f/R4J9Q7V6wG9Y9C9S5J4K3L2M1O'; // default fallback
@@ -95,7 +111,7 @@ export async function seedMongoFromLocalFiles(db: Db) {
         admin_password_hash: adminPassHash,
         daily_limit: 3,
         updated_at: new Date().toISOString()
-      });
+      }).catch(() => {});
       console.log('[MongoDB] Seeded initial app_settings.');
     }
   } catch (err) {
