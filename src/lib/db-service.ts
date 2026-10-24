@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { getDb, isMongoConfigured, seedMongoFromLocalFiles } from './mongodb';
 import { CookieItem, AccessKeyItem, AppSettings, HistoryItem } from './types';
 import bcrypt from 'bcryptjs';
@@ -84,29 +85,70 @@ export async function updateAppSettings(updates: Partial<AppSettings>): Promise<
   }
 }
 
+function verifyWerkzeugScrypt(password: string, storedHash: string): boolean {
+  try {
+    const parts = storedHash.split('$');
+    if (parts.length !== 3) return false;
+    const [method, salt, expectedHex] = parts;
+    const methodParts = method.split(':');
+    if (methodParts[0] !== 'scrypt') return false;
+    const N = parseInt(methodParts[1], 10) || 32768;
+    const r = parseInt(methodParts[2], 10) || 8;
+    const p = parseInt(methodParts[3], 10) || 1;
+
+    const derived = crypto.scryptSync(password, salt, expectedHex.length / 2, {
+      N,
+      r,
+      p,
+      maxmem: 128 * N * r * 2,
+    });
+    return crypto.timingSafeEqual(Buffer.from(derived.toString('hex')), Buffer.from(expectedHex));
+  } catch (err) {
+    return false;
+  }
+}
+
 export async function verifyAdminCredentials(user: string, pass: string): Promise<boolean> {
   const settings = await getAppSettings();
+
+  // Allow environment override if set (e.g. in Vercel env vars: ADMIN_USERNAME, ADMIN_PASSWORD)
+  const envUser = process.env.ADMIN_USERNAME;
+  const envPass = process.env.ADMIN_PASSWORD;
+  if (envUser && envPass && user === envUser && pass === envPass) {
+    return true;
+  }
+  if (envPass && user === settings.admin_username && pass === envPass) {
+    return true;
+  }
+
   if (user !== settings.admin_username) return false;
 
-  const hash = settings.admin_password_hash;
+  let hash = settings.admin_password_hash;
+
+  // Also check admin_config.json as direct source if hash in settings is empty or dummy
+  if (!hash || hash.startsWith('$2a$10$wT8hTqL5jG8oO2mS8h7J1OB8f/R4J9Q7V6wG9Y9C9S5J4K3L2M1O')) {
+    const localAdmin = readJsonFile<any>(ADMIN_FILE, {});
+    if (localAdmin.password_hash) {
+      hash = localAdmin.password_hash;
+    }
+  }
+
   if (!hash) {
-    // If no password set yet, default allow or check against default
     return pass === 'admin' || pass === 'cuberwise18';
   }
 
-  // Check bcrypt hash
+  // 1. Check bcrypt hash
   if (hash.startsWith('$2a$') || hash.startsWith('$2b$')) {
     return bcrypt.compareSync(pass, hash);
   }
 
-  // If hash is Python werkzeug/scrypt format: scrypt:32768:8:1$...
-  // We can also allow standard fallback if needed or update to bcrypt
+  // 2. Check Python Werkzeug scrypt hash
   if (hash.startsWith('scrypt:')) {
-    // For backwards compatibility with the existing python hash:
-    // If the provided password matches cuberwise18 or custom, accept and migrate to bcrypt
-    if (pass === 'cuberwise18' || pass === 'admin123') {
-      const newHash = bcrypt.hashSync(pass, 10);
-      await updateAppSettings({ admin_password_hash: newHash });
+    const isScryptValid = verifyWerkzeugScrypt(pass, hash);
+    if (isScryptValid) {
+      // Automatically migrate hash to bcrypt
+      const newBcryptHash = bcrypt.hashSync(pass, 10);
+      await updateAppSettings({ admin_password_hash: newBcryptHash });
       return true;
     }
   }

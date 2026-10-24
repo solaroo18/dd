@@ -92,18 +92,20 @@ export async function seedMongoFromLocalFiles(db: Db) {
 
     const settingsCol = db.collection('settings');
     const settingsDoc = await settingsCol.findOne({ key: 'app_settings' }).catch(() => null);
-    if (!settingsDoc) {
-      let adminUser = 'cuberwise18';
-      let adminPassHash = '$2a$10$wT8hTqL5jG8oO2mS8h7J1OB8f/R4J9Q7V6wG9Y9C9S5J4K3L2M1O'; // default fallback
-      const adminPath = path.join(process.cwd(), 'admin_config.json');
-      if (fs.existsSync(adminPath)) {
-        try {
-          const raw = fs.readFileSync(adminPath, 'utf-8');
-          const data = JSON.parse(raw);
-          if (data.username) adminUser = data.username;
-        } catch (_) {}
-      }
+    
+    let adminUser = process.env.ADMIN_USERNAME || 'cuberwise18';
+    let adminPassHash = '';
+    const adminPath = path.join(process.cwd(), 'admin_config.json');
+    if (fs.existsSync(adminPath)) {
+      try {
+        const raw = fs.readFileSync(adminPath, 'utf-8');
+        const data = JSON.parse(raw);
+        if (data.username) adminUser = data.username;
+        if (data.password_hash) adminPassHash = data.password_hash;
+      } catch (_) {}
+    }
 
+    if (!settingsDoc) {
       await settingsCol.insertOne({
         key: 'app_settings',
         require_key: true,
@@ -113,6 +115,13 @@ export async function seedMongoFromLocalFiles(db: Db) {
         updated_at: new Date().toISOString()
       }).catch(() => {});
       console.log('[MongoDB] Seeded initial app_settings.');
+    } else if (settingsDoc.admin_password_hash === '$2a$10$wT8hTqL5jG8oO2mS8h7J1OB8f/R4J9Q7V6wG9Y9C9S5J4K3L2M1O' && adminPassHash) {
+      // Auto-repair dummy password hash with real hash from admin_config.json
+      await settingsCol.updateOne(
+        { key: 'app_settings' },
+        { $set: { admin_password_hash: adminPassHash, admin_username: adminUser } }
+      ).catch(() => {});
+      console.log('[MongoDB] Repaired admin password hash.');
     }
   } catch (err) {
     console.error('[MongoDB Seed Error]', err);
