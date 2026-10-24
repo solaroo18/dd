@@ -1260,6 +1260,8 @@ def verify_access_key(key_str, increment_use=False):
 # Routes
 # -------------------------------------------------------------
 @app.route("/")
+@app.route("/api")
+@app.route("/api/")
 def index():
     return render_template("index.html")
 
@@ -1973,6 +1975,23 @@ def admin_toggle_cookie():
     return jsonify({"success": False, "error": "الكوكيز غير موجود"}), 404
 
 
+@app.route("/api/admin/cookies/switch-pool", methods=["POST"])
+@require_admin
+def admin_switch_cookie_pool():
+    data = request.get_json(silent=True) or {}
+    cookie_id = data.get("id")
+    target_pool = data.get("pool_type", "primary")
+
+    pool = load_pool()
+    for c in pool:
+        if c.get("id") == cookie_id:
+            c["pool_type"] = target_pool
+            save_pool(pool)
+            return jsonify({"success": True, "message": "تم تغيير المجموعة بنجاح", "pool_type": target_pool})
+
+    return jsonify({"success": False, "error": "الكوكيز غير موجود"}), 404
+
+
 @app.route("/api/admin/cookies/test", methods=["POST"])
 @require_admin
 def admin_test_cookie():
@@ -2569,7 +2588,7 @@ def get_history():
 # Custom error handlers to prevent information leakage
 @app.errorhandler(404)
 def not_found(e):
-    if request.path.startswith("/api/"):
+    if request.path.startswith("/api/") and request.path.strip("/") != "api":
         return jsonify({"success": False, "error": "Resource not found"}), 404
     return render_template("index.html"), 404
 

@@ -41,15 +41,21 @@ class VercelPrefixMiddleware:
         # Normalize SCRIPT_NAME and PATH_INFO
         environ["SCRIPT_NAME"] = ""
         
-        for prefix in ("/api/index.py", "/api/index"):
+        # Strip internal function prefixes if present
+        for prefix in ("/api/index.py", "/api/index", "/index.py", "/index"):
             if path_info.startswith(prefix):
                 path_info = path_info[len(prefix):]
                 break
                 
-        if not path_info or path_info == "":
+        # Normalize paths pointing to the serverless function root
+        if not path_info or path_info in ("", "/", "/api", "/api/"):
             path_info = "/"
         elif not path_info.startswith("/"):
             path_info = "/" + path_info
+
+        # Handle potential duplicate /api/api/ prefix from nested rewrites
+        if path_info.startswith("/api/api/"):
+            path_info = path_info[4:]
             
         environ["PATH_INFO"] = path_info
         return self.wsgi_app(environ, start_response)
