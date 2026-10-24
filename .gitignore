@@ -20,3 +20,10 @@ access_keys.json
 .flask_secret
 app.log
 *.log
+
+# Next.js
+node_modules/
+.next/
+out/
+.env.local
+.env.*.local

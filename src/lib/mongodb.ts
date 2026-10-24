@@ -1,0 +1,104 @@
+import { MongoClient, Db } from 'mongodb';
+import fs from 'fs';
+import path from 'path';
+
+const MONGODB_URI = process.env.MONGODB_URI || '';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'netflix_nftoken';
+
+let client: MongoClient | null = null;
+let clientPromise: Promise<MongoClient> | null = null;
+
+declare global {
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
+
+export function isMongoConfigured(): boolean {
+  return !!MONGODB_URI && MONGODB_URI.trim().length > 0;
+}
+
+export async function getMongoClient(): Promise<MongoClient | null> {
+  if (!isMongoConfigured()) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    if (!global._mongoClientPromise) {
+      client = new MongoClient(MONGODB_URI);
+      global._mongoClientPromise = client.connect();
+    }
+    return global._mongoClientPromise;
+  } else {
+    if (!clientPromise) {
+      client = new MongoClient(MONGODB_URI);
+      clientPromise = client.connect();
+    }
+    return clientPromise;
+  }
+}
+
+export async function getDb(): Promise<Db | null> {
+  const cli = await getMongoClient();
+  if (!cli) return null;
+  return cli.db(DB_NAME);
+}
+
+// Auto-seed existing JSON data into MongoDB if collections are empty
+export async function seedMongoFromLocalFiles(db: Db) {
+  try {
+    const cookiesCol = db.collection('cookies');
+    const cookieCount = await cookiesCol.countDocuments();
+    if (cookieCount === 0) {
+      const cookiesPath = path.join(process.cwd(), 'cookies_pool.json');
+      if (fs.existsSync(cookiesPath)) {
+        const raw = fs.readFileSync(cookiesPath, 'utf-8');
+        const data = JSON.parse(raw);
+        if (Array.isArray(data) && data.length > 0) {
+          await cookiesCol.insertMany(data);
+          console.log(`[MongoDB] Seeded ${data.length} cookies from local file.`);
+        }
+      }
+    }
+
+    const keysCol = db.collection('access_keys');
+    const keyCount = await keysCol.countDocuments();
+    if (keyCount === 0) {
+      const keysPath = path.join(process.cwd(), 'access_keys.json');
+      if (fs.existsSync(keysPath)) {
+        const raw = fs.readFileSync(keysPath, 'utf-8');
+        const data = JSON.parse(raw);
+        const keysArr = Object.values(data.keys || {});
+        if (keysArr.length > 0) {
+          await keysCol.insertMany(keysArr as any[]);
+          console.log(`[MongoDB] Seeded ${keysArr.length} access keys from local file.`);
+        }
+      }
+    }
+
+    const settingsCol = db.collection('settings');
+    const settingsDoc = await settingsCol.findOne({ key: 'app_settings' });
+    if (!settingsDoc) {
+      let adminUser = 'cuberwise18';
+      let adminPassHash = '$2a$10$wT8hTqL5jG8oO2mS8h7J1OB8f/R4J9Q7V6wG9Y9C9S5J4K3L2M1O'; // default fallback
+      const adminPath = path.join(process.cwd(), 'admin_config.json');
+      if (fs.existsSync(adminPath)) {
+        try {
+          const raw = fs.readFileSync(adminPath, 'utf-8');
+          const data = JSON.parse(raw);
+          if (data.username) adminUser = data.username;
+        } catch (_) {}
+      }
+
+      await settingsCol.insertOne({
+        key: 'app_settings',
+        require_key: true,
+        admin_username: adminUser,
+        admin_password_hash: adminPassHash,
+        daily_limit: 3,
+        updated_at: new Date().toISOString()
+      });
+      console.log('[MongoDB] Seeded initial app_settings.');
+    }
+  } catch (err) {
+    console.error('[MongoDB Seed Error]', err);
+  }
+}
