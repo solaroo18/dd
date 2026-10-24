@@ -2,6 +2,8 @@
  * XNetflix — Admin Dashboard Controller
  * Professional, clean, no emojis — English-first
  */
+(function () {
+  'use strict';
 
 const translations = {
   en: {
@@ -131,12 +133,19 @@ let currentCookiesList = [];
 let currentKeysList = [];
 let selectedCookieIds = new Set();
 
-// Initialize
-document.addEventListener("DOMContentLoaded", () => {
-  applyLanguage();
-  setupEventListeners();
-  checkAuth();
-});
+  // Initialize
+  function initAdmin() {
+    applyLanguage();
+    setupEventListeners();
+    checkAuth();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAdmin);
+  } else {
+    initAdmin();
+  }
+
 
 function t(key) {
   return (translations[currentLang] || translations.en)[key] || key;
@@ -1403,4 +1412,6 @@ function fallbackCopyText(text, successMsg) {
   }
   document.body.removeChild(ta);
 }
+
+})();
 

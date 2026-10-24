@@ -1,8 +1,10 @@
 // ==========================================================================
 // XNetflix — Minimalist Auto-Activation Engine (Matching User Mockup)
 // ==========================================================================
+(function () {
+  'use strict';
 
-const translations = {
+  const translations = {
   tabComputer: "Computer",
   tabPhone: "Phone",
   tabTv: "TV",
@@ -84,14 +86,21 @@ let elBtnKeyStatusChip, elKeyStatusChipLabel, elKeySwitchModal, elBtnCloseKeySwi
 let elActiveKeyBanner, elKeyBannerLabel, elKeyBannerDisplay, elKeyBannerCountdown, elKeyBannerTime;
 let elActiveKeyRemaining, elActiveKeyExpiry, elActiveKeyExpiryRow;
 
-// Initialization
-document.addEventListener("DOMContentLoaded", () => {
-  cacheElements();
-  setupLanguage();
-  setupDeviceTabs();
-  setupActions();
-  setupAccessKeySystem();
-});
+  // Initialization
+  function initApp() {
+    cacheElements();
+    setupLanguage();
+    setupDeviceTabs();
+    setupActions();
+    setupAccessKeySystem();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+  } else {
+    initApp();
+  }
+
 
 function cacheElements() {
   elTabComputer = document.getElementById("tabComputer");
@@ -894,4 +903,6 @@ function logoutAccessKey() {
   showAccessGate();
   showToast("Logged out of access key", "info");
 }
+
+})();
 
